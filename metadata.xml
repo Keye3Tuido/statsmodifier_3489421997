@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+    <name>StatsModifier游戏属性修改器</name>
+    <directory>statsmodifier</directory>
+    <id>3489421997</id>
+    <description>
+    向控制台添加了一系列实用的指令。
+    [url=https://github.com/SoarCaxton/statsmodifier_3489421997]&gt;[u]点我查看指令介绍[/u]&lt;[/url]
+    </description>
+    <version>7.0.0</version>
+    <visibility>Public</visibility>
+    <tag id="Lua"/>
+    <tag id="Tweaks"/>
+</metadata>
