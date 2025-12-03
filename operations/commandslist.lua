@@ -33,6 +33,7 @@ local Commands={
     tp                  = require('operations.commands.tp'),
     mirror_mineshaft    = require('operations.commands.mirror_mineshaft'),
     ascent              = require('operations.commands.ascent'),
+    bullettime          = require('operations.commands.bullettime'),
     version             = require('operations.commands.version'),
     -- new_command = require('operations.commands.new_command'),
     -- 函数名小写，与enums.Commands中的key一致

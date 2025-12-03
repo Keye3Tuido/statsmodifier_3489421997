@@ -45,6 +45,7 @@ Input2Id.CommandsID={
     ['lost']                = Commands.LOST,                    ['lo'] = Commands.LOST,
     ['mirrormineshaft']     = Commands.MIRROR_MINESHAFT,        ['mi'] = Commands.MIRROR_MINESHAFT,
     ['ascent']              = Commands.ASCENT,                  ['as'] = Commands.ASCENT,
+    ['bullettime']          = Commands.BULLETTIME,              ['bu'] = Commands.BULLETTIME,
 
 
     -------------------------------------------- 下面的指令无缩写形式

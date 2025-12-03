@@ -3,6 +3,7 @@ local show = require('operations.manage_show')
 local isAccelerating = false
 
 local function OnPostUpdate()
+    if show.TimeSpeedMultiplier <= 1 then return end
     if(isAccelerating)then return end
     isAccelerating = true
     show.accumulator=show.accumulator+show.fractionPart

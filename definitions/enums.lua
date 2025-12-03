@@ -64,6 +64,7 @@ Enums.Commands={
     INFO=102,
     MOUSE=103,
     MADEINHEAVEN=104,
+    BULLETTIME=105,
     VERSION=1000,
     -- 新指令的key应当与函数名一致
 }
