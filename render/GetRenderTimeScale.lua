@@ -2,7 +2,7 @@ local show = require('operations.manage_show')
 
 local lastTime = Isaac.GetTime()
 local lastRenderFrame = Isaac.GetFrameCount()
-local period = 2
+local period = 1
 local count = 0
 local renderFramesPerSecond = 60
 
