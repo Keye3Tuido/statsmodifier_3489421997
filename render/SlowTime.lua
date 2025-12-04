@@ -7,7 +7,7 @@ local function SlowTime()
     if show.TimeSpeedMultiplier < show.RenderTimeScale then
         show.BulletTimeUpdateNums = show.BulletTimeUpdateNums * 1.2
     elseif show.TimeSpeedMultiplier > show.RenderTimeScale then
-        show.BulletTimeUpdateNums = math.max(1, show.BulletTimeUpdateNums/2)
+        show.BulletTimeUpdateNums = math.max(0.5, show.BulletTimeUpdateNums/2)
     end
     for i=1, math.floor(show.BulletTimeUpdateNums) do
         Isaac.GetRoomEntities()
