@@ -54,6 +54,8 @@ Input2Id.CommandsID={
     ['tp']                  = Commands.TP,
     ['id']                  = Commands.SHOWID,
     ['version']             = Commands.VERSION,
+    ['wrap']                = Commands.WRAP,                    ['wr'] = Commands.WRAP,
+    ['anonymous']           = Commands.ANONYMOUS,               ['an'] = Commands.ANONYMOUS,
 }
 
 Input2Id.OpsID={                -- gsub pattern

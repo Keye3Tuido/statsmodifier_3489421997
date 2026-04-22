@@ -3,6 +3,7 @@ local show={
     showStatsInfo = false,
     showMouse = false,
     showPlayerId = false,
+    showCommandUI = false,
     TimeSpeedMultiplier = 1,
     integerPart = 1,  -- Used for calculating the integer part of TimeSpeedMultiplier
     fractionPart = 0,  -- Used for calculating the fractional part of TimeSpeedMultiplier

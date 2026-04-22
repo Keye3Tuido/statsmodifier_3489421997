@@ -38,4 +38,8 @@ return function(StatsModifier)
     StatsModifier:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE,OnPostPlayerUpdate)
     StatsModifier:AddCallback(ModCallbacks.MC_POST_RENDER,OnPostRender)
     StatsModifier:AddCallback(ModCallbacks.MC_POST_UPDATE,OnPostUpdate)
+
+    -- 注册输入拦截回调：当 Command UI 打开时阻止游戏接收输入
+    local CommandUI = require('render.CommandUI')
+    StatsModifier:AddCallback(ModCallbacks.MC_INPUT_ACTION,CommandUI.OnInputAction)
 end

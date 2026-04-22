@@ -35,6 +35,8 @@ local Commands={
     ascent              = require('operations.commands.ascent'),
     bullettime          = require('operations.commands.bullettime'),
     version             = require('operations.commands.version'),
+    wrap                = require('operations.commands.wrap'),
+    anonymous           = require('operations.commands.anonymous'),
     -- new_command = require('operations.commands.new_command'),
     -- 函数名小写，与enums.Commands中的key一致
     -- 新增功能还应当更新produce_input.Input2Id.CommandsID表

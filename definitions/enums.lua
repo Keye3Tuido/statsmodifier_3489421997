@@ -65,6 +65,8 @@ Enums.Commands={
     MOUSE=103,
     MADEINHEAVEN=104,
     BULLETTIME=105,
+    WRAP=106,
+    ANONYMOUS=107,
     VERSION=1000,
     -- 新指令的key应当与函数名一致
 }
