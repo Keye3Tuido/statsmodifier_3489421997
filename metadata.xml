@@ -13,6 +13,8 @@
 
     使用方法：
     [H1]使用反斜杠'\'打开/关闭修改器[/H1]
+    右上角可以指定对哪个玩家进行操作，想查看玩家ID可以使用“ID”显示功能；
+    每个指令都可以点击[?]查看指令介绍，回车应用指令修改。
 
     [hr][/hr]
 
@@ -21,7 +23,7 @@
     向控制台添加了一系列实用的指令。
     [url=https://github.com/SoarCaxton/statsmodifier_3489421997]&gt;[u]点我查看指令介绍[/u]&lt;[/url]
     </description>
-    <version>8.0.0</version>
+    <version>8.0.1</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
     <tag id="Tweaks"/>
