@@ -57,11 +57,12 @@ end
 local StatusFuncs = {}
 
 StatusFuncs["blind"] = function(playerId)
-    local ok, isBlind = pcall(function()
+    local ok, canShoot = pcall(function()
         return Players:CanShoot(playerId)
     end)
-    if ok and isBlind ~= nil then
-        local status = isBlind and "Blind" or "Normal"
+    if ok and canShoot ~= nil then
+        -- CanShoot 存储的是 canShoot 标志：true=正常可射击, false=蒙眼
+        local status = canShoot and "Normal" or "Blind"
         return { { label = "Status", value = status } }
     elseif ok then
         return { { label = "Status", value = "Normal" } }

@@ -18,7 +18,13 @@ InputManager.KeyCharMap[Keyboard.KEY_MINUS]        = '-'
 InputManager.KeyCharMap[Keyboard.KEY_PERIOD]       = '.'
 InputManager.KeyCharMap[Keyboard.KEY_KP_ADD]       = '+'
 InputManager.KeyCharMap[Keyboard.KEY_KP_MULTIPLY]  = '*'
+InputManager.KeyCharMap[Keyboard.KEY_KP_SUBTRACT]  = '-'
+InputManager.KeyCharMap[Keyboard.KEY_KP_DECIMAL]   = '.'
 InputManager.KeyCharMap[Keyboard.KEY_SPACE]        = ' '
+-- 小键盘数字 0-9
+for i = 0, 9 do
+    InputManager.KeyCharMap[Keyboard.KEY_KP_0 + i] = string.char(string.byte('0') + i)
+end
 
 InputManager.ShiftKeyCharMap = {
     [Keyboard.KEY_MINUS] = '_',
@@ -51,7 +57,8 @@ function InputManager.Update(panelState)
     -- 3. 编辑玩家 ID 模式
     if panelState.editingPlayerId then
         for i = 0, 9 do
-            if Input.IsButtonTriggered(Keyboard.KEY_0 + i, 0) then
+            if Input.IsButtonTriggered(Keyboard.KEY_0 + i, 0)
+            or Input.IsButtonTriggered(Keyboard.KEY_KP_0 + i, 0) then
                 panelState.appendPlayerId(tostring(i))
             end
         end

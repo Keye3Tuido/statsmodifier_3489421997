@@ -283,24 +283,54 @@ function PanelState.getSearchResults()
     searchName = searchName:gsub('([%(%)%.%%%+%-%*%?%[%]%^%$])', '%%%1')
     if searchName == "" then return nil end
     local maxResults = 50
+    local isNumeric = text:match('^%-?%d+$') ~= nil
 
     local ok, _ = pcall(function()
         if isCollectible then
             local config = Isaac.GetItemConfig()
+            -- 正数 ID 道具
             for i = 1, config:GetCollectibles().Size - 1 do
                 local item = config:GetCollectible(i)
-                if item and item.Name and item.Name:lower():match(searchName) then
-                    table.insert(results, { value = tostring(i), label = i .. ": " .. item.Name })
-                    if #results >= maxResults then break end
+                if item and item.Name then
+                    local matched = item.Name:lower():match(searchName)
+                    if not matched and isNumeric then
+                        matched = tostring(i):sub(1, #text) == text
+                    end
+                    if matched then
+                        table.insert(results, { value = tostring(i), label = i .. ": " .. item.Name })
+                        if #results >= maxResults then return end
+                    end
                 end
+            end
+            -- 负数 ID 错误道具（从 -1 开始向下遍历）
+            local i = -1
+            while ItemConfig.Config.IsValidCollectible(i) do
+                local item = config:GetCollectible(i)
+                if item and item.Name then
+                    local matched = item.Name:lower():match(searchName)
+                    if not matched and isNumeric then
+                        matched = tostring(i):sub(1, #text) == text
+                    end
+                    if matched then
+                        table.insert(results, { value = tostring(i), label = i .. ": " .. item.Name })
+                        if #results >= maxResults then return end
+                    end
+                end
+                i = i - 1
             end
         elseif isTrinket then
             local config = Isaac.GetItemConfig()
             for i = 1, config:GetTrinkets().Size - 1 do
                 local trinket = config:GetTrinket(i)
-                if trinket and trinket.Name and trinket.Name:lower():match(searchName) then
-                    table.insert(results, { value = tostring(i), label = i .. ": " .. trinket.Name })
-                    if #results >= maxResults then break end
+                if trinket and trinket.Name then
+                    local matched = trinket.Name:lower():match(searchName)
+                    if not matched and isNumeric then
+                        matched = tostring(i):sub(1, #text) == text
+                    end
+                    if matched then
+                        table.insert(results, { value = tostring(i), label = i .. ": " .. trinket.Name })
+                        if #results >= maxResults then return end
+                    end
                 end
             end
         end
