@@ -17,6 +17,11 @@ function CommandUI.Update()
     if PanelState.visible then
         ClickManager.Update(PanelState, CommandUIRender.GetUIElements(PanelState))
 
+        -- 每帧刷新玩家名称（只要有合法数字 ID 就尝试获取）
+        if not PanelState.editingPlayerId then
+            PanelState.refreshPlayerName()
+        end
+
         -- 检测玩家数量变动，自动校验当前 PlayerID
         local numPlayers = Game():GetNumPlayers()
         if numPlayers ~= lastNumPlayers then
@@ -27,9 +32,11 @@ function CommandUI.Update()
                     local ok, player = pcall(function() return Players:GetPlayerById(id) end)
                     if not ok or not player then
                         PanelState.playerIdText = "0"
+                        PanelState.playerName = ""
                         PanelState.setFeedback("PlayerID " .. tostring(id) .. " lost, reset to 0", true)
                     end
                 end
+                PanelState.refreshPlayerName()
             end
         end
     end
@@ -81,9 +88,8 @@ end
 
 --- MC_INPUT_ACTION 回调
 --- 参数: (self, entity, inputHook, buttonAction)
-function CommandUI.OnInputAction(_, entity, inputHook, _)
+function CommandUI.OnInputAction(_, _, inputHook, _)
     if not PanelState.visible then return end
-    if entity == nil then return end
     return inputHook == InputHook.GET_ACTION_VALUE and 0
 end
 

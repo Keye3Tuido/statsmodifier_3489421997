@@ -272,7 +272,7 @@ CommandDefs.CommandGroups = {
             { key = "gc",         label = "给予道具",   desc = "给予玩家道具。输入道具ID或名称子串（不区分大小写）。前缀_将主动道具放入副手。支持添加错误道具。",                                 modType = "text", hasUnderscoreModifier = true, underscoreLabel = "副手(_)", statusKey = "gc" },
             { key = "gigabombs",  label = "巨型炸弹",  desc = "给予玩家巨型炸弹。支持负数和±inf。空参将大炸弹变回普通炸弹。",                            modType = "value", statusKey = "gigabombs" },
             { key = "golden",     label = "金掉落",     desc = "给予玩家金炸弹和金钥匙。无需参数。",                                             modType = "none" },
-            { key = "gulp",       label = "吞饰品",       desc = "玩家获得被吞下的饰品。输入饰品ID或名称子串（不区分大小写）。空参吞下当前饰品栏中的饰品。",                                  modType = "text", hasUnderscoreModifier = true, underscoreLabel = "金饰品(_)" },
+            { key = "gulp",       label = "吞饰品",       desc = "玩家获得被吞下的饰品。输入饰品ID或名称子串（不区分大小写）。空参吞下当前饰品栏中的饰品。",                                  modType = "text", hasUnderscoreModifier = true, underscoreLabel = "金饰品(_)", allowEmpty = true },
             { key = "keys",       label = "钥匙",       desc = "给予玩家钥匙。支持负数和±inf。空参清空钥匙。",                                   modType = "value", statusKey = "keys" },
             { key = "lost",       label = "白火形态",       desc = "切换玩家灵魂形态和普通形态（白火效果）。",                                          modType = "none", statusKey = "lost" },
             { key = "playertype", label = "角色类型", desc = "修改玩家角色类型。选择或输入角色ID/名称（不区分大小写，可用子串缩写）。前缀_切换为堕化版本。空参查看当前角色。",                                 modType = "enum", options = "PlayerTypeOptions", statusKey = "playertype" },
@@ -344,6 +344,7 @@ function CommandDefs.GetFlatCommands()
                 hasUnderscoreModifier = cmd.hasUnderscoreModifier,
                 underscoreLabel = cmd.underscoreLabel,
                 statusKey = cmd.statusKey,
+                allowEmpty = cmd.allowEmpty,
             })
         end
     end

@@ -12,12 +12,12 @@ local HEADER_H = 16
 local COL1_W = 105
 local COL2_W = 125
 local COL3_W = PW - COL1_W - COL2_W
-local FONT_SCALE = 0.28  -- 幼圆字体缩放比例
-local LH = 7            -- 行高
+local FONT_SCALE = 0.24  -- 幼圆字体缩放比例
+local LH = 6            -- 行高
 local ITEM_PAD = 1      -- 行间额外间距
 local PAD = 3
-local CHAR_W = 3        -- youyuan 0.28 scale
-local COL_HEADER_H = 7  -- 列标题高度
+local CHAR_W = 3        -- youyuan 0.24 scale
+local COL_HEADER_H = 6  -- 列标题高度
 local SCROLLBAR_W = 2   -- 滚动条宽度
 
 -- ─── 白色背景 Sprite ──────────────────────────────────────
@@ -185,6 +185,10 @@ function CommandUIRender.Render(panelState)
     end
     local pc = panelState.editingPlayerId and C_PID_EDIT or C_PID
     if hov == "player_id" then pc = C_PID_HI end
+    -- 玩家名称（PlayerID 左侧）
+    if panelState.playerName ~= "" then
+        drawText(panelState.playerName, bx + PW - 76 - getFont():GetStringWidthUTF8(panelState.playerName) * FONT_SCALE - 4, tabY, C_LABEL)
+    end
     drawText("PlayerID:" .. pidVal, bx + PW - 76, tabY, pc)
 
     -- ═══ 列标题行 ═══
@@ -272,10 +276,19 @@ function CommandUIRender.Render(panelState)
             else
                 drawText(forceLabel, col2X, forceY, C_LABEL)
             end
+            -- 空参执行（取消属性修改）
+            local reY = forceY + rowH + 2
+            local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
+            drawText("[空参执行]", col2X, reY, reC)
 
         elseif def.modType == "enum" then
             local optionsList = CommandDefs.GetOptions(def.options)
             if optionsList then
+                -- 空参执行按钮
+                local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
+                drawText("[空参执行]", col2X, modY, reC)
+                modY = modY + rowH + 1
+
                 -- underscore modifier checkbox
                 local checkboxOffset = 0
                 if def.hasUnderscoreModifier then
@@ -345,8 +358,10 @@ function CommandUIRender.Render(panelState)
             drawText("输入ID或名称:", col2X, modY, C_NORMAL)
             drawText("ID或名称子串", col2X, modY + LH, C_HINT)
             local reY = modY + LH * 2 + 4
-            local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
-            drawText("[空参执行]", col2X, reY, reC)
+            if def.allowEmpty then
+                local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
+                drawText("[空参执行]", col2X, reY, reC)
+            end
 
             -- ═══ 搜索结果列表 ═══
             local searchResults = panelState.getSearchResults()
@@ -468,7 +483,7 @@ function CommandUIRender.Render(panelState)
     -- ═══ 底部提示栏 ═══
     local hintY = by + PH - L.bottomBarH
     drawRect(bx + 1, hintY, PW - 2, L.bottomBarH - 1, 0.93, 0.93, 0.93)
-    drawText("[\\]开关  [Tab]切换  [Enter]执行  分栏内按住右键可上下拖动", bx + PAD, hintY + 3, C_HINT)
+    drawText("[\\]开关  [Tab]切换  [Enter]执行  按住鼠标右键可上下拖动分栏", bx + PAD, hintY + 3, C_HINT)
 
     -- ═══ 设置列区域（供 ClickManager 使用）═══
     ClickManager.col1Area = { x = bx + 1, y = contentY, w = COL1_W - 2, h = contentH }
@@ -605,8 +620,29 @@ function CommandUIRender.GetUIElements(panelState)
                 width = COL2_W - 2, height = LH + 1,
                 action = function() panelState.toggleForce() end,
             })
+            -- 空参执行（取消属性修改）
+            local reY = forceY + rowH + 2
+            table.insert(elements, {
+                id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
+                width = 60, height = LH + 1,
+                action = function()
+                    panelState.paramText = ""
+                    panelState.executeCommand()
+                end,
+            })
 
         elseif def.modType == "enum" then
+            -- 空参执行
+            table.insert(elements, {
+                id = "run_empty", x = bx + COL1_W + PAD + 1, y = modY,
+                width = 60, height = LH + 1,
+                action = function()
+                    panelState.paramText = ""
+                    panelState.executeCommand()
+                end,
+            })
+            modY = modY + rowH + 1
+
             local checkboxOffset = 0
             if def.hasUnderscoreModifier then
                 table.insert(elements, {
@@ -645,14 +681,16 @@ function CommandUIRender.GetUIElements(panelState)
             -- Match Render(): modY advances by rowH+2, then reY = modY + LH*2 + 4
             local adjustedModY = modY + rowH + 2
             local reY = adjustedModY + LH * 2 + 4
-            table.insert(elements, {
-                id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
-                width = 60, height = LH + 1,
-                action = function()
-                    panelState.paramText = ""
-                    panelState.executeCommand()
-                end,
-            })
+            if def.allowEmpty then
+                table.insert(elements, {
+                    id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
+                    width = 60, height = LH + 1,
+                    action = function()
+                        panelState.paramText = ""
+                        panelState.executeCommand()
+                    end,
+                })
+            end
             -- Search result click elements
             local searchResults = panelState.getSearchResults()
             if searchResults then
@@ -675,14 +713,16 @@ function CommandUIRender.GetUIElements(panelState)
             end
         elseif def.modType == "text" then
             local reY = modY + LH * 2 + 4
-            table.insert(elements, {
-                id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
-                width = 60, height = LH + 1,
-                action = function()
-                    panelState.paramText = ""
-                    panelState.executeCommand()
-                end,
-            })
+            if def.allowEmpty then
+                table.insert(elements, {
+                    id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
+                    width = 60, height = LH + 1,
+                    action = function()
+                        panelState.paramText = ""
+                        panelState.executeCommand()
+                    end,
+                })
+            end
             -- Search result click elements
             local searchResults = panelState.getSearchResults()
             if searchResults then

@@ -25,6 +25,7 @@ PanelState.paramText = ""
 
 -- ─── 玩家 ID ───────────────────────────────────────────────
 PanelState.playerIdText = "0"
+PanelState.playerName = ""  -- 当前玩家名称（实时更新）
 PanelState.editingPlayerId = false
 
 -- ─── 反馈消息 ──────────────────────────────────────────────
@@ -60,6 +61,7 @@ function PanelState.open()
     if PanelState.visible then return end
     PanelState.visible = true
     PanelState.editingPlayerId = false
+    PanelState.refreshPlayerName()
 end
 
 --- 关闭 UI
@@ -166,6 +168,7 @@ function PanelState.confirmPlayerId()
     local id = tonumber(PanelState.playerIdText)
     if not id then
         PanelState.playerIdText = "0"
+        PanelState.playerName = ""
         PanelState.setFeedback("PlayerID invalid, reset to 0", true)
         return
     end
@@ -173,14 +176,32 @@ function PanelState.confirmPlayerId()
     local ok, player = pcall(function() return Players:GetPlayerById(id) end)
     if not ok or not player then
         PanelState.playerIdText = "0"
+        PanelState.playerName = ""
         PanelState.setFeedback("PlayerID " .. tostring(id) .. " not found, reset to 0", true)
+    else
+        PanelState.refreshPlayerName()
     end
+end
+
+--- 刷新当前玩家名称
+function PanelState.refreshPlayerName()
+    local id = tonumber(PanelState.playerIdText)
+    if not id then
+        PanelState.playerName = ""
+        return
+    end
+    local ok, name = pcall(function()
+        local ep = Players:GetPlayerById(id)
+        if ep then return ep:GetName() end
+        return nil
+    end)
+    PanelState.playerName = (ok and name) or ""
 end
 
 function PanelState.getPlayerId()
     local id = tonumber(PanelState.playerIdText)
     if not id then return 0 end
-    return id  -- 直接返回输入的 ID，执行时由 OnExecuteCmd 处理不存在的情况
+    return id
 end
 
 function PanelState.setFeedback(msg, isError)
