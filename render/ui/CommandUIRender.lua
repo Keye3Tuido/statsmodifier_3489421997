@@ -241,7 +241,7 @@ function CommandUIRender.Render(panelState)
     -- 第一列滚动条
     drawScrollbar(bx + COL1_W, contentY, contentH, #itemList, maxVisible, panelState.scrollOffset)
 
-    -- ═══ 第二列：限定符 / 选项 / 描述 ═══
+    -- ═══ 第二列：选项分栏 ═══
     local col2X = bx + COL1_W + PAD + 1
     local def = panelState.selectedDef
 
@@ -251,194 +251,158 @@ function CommandUIRender.Render(panelState)
         drawText("[?]", bx + COL1_W + COL2_W - 18, contentY + 1, helpBtnC)
 
         local modY = contentY + 2
+        local col2 = def.col2 or {}
 
-        if def.modType == "op_value" then
-            local ops = CommandDefs.Operators
-            for i, op in ipairs(ops) do
-                local oy = modY + (i - 1) * rowH
-                if panelState.selectedModIndex == i then
-                    drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, SEL_R, SEL_G, SEL_B, 1)
-                    drawText(op.label, col2X, oy, C_SEL_TEXT)
-                elseif hov == ("mod_" .. i) then
-                    drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, HOV_R, HOV_G, HOV_B, 1)
-                    drawText(op.label, col2X, oy, C_HOVER)
-                else
-                    drawText(op.label, col2X, oy, C_NORMAL)
-                end
-            end
-            -- 强制模式
-            local forceY = modY + #ops * rowH + 2
-            local forceLabel = panelState.forceMode and "[x] 强制模式(_)" or "[ ] 强制模式(_)"
-            if hov == "mod_force" then
-                drawText(forceLabel, col2X, forceY, C_HOVER)
-            elseif panelState.forceMode then
-                drawText(forceLabel, col2X, forceY, C_FORCE_ON)
-            else
-                drawText(forceLabel, col2X, forceY, C_LABEL)
-            end
-            -- 空参执行（取消属性修改）
-            local reY = forceY + rowH + 2
-            local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
-            drawText("[空参执行]", col2X, reY, reC)
+        for _, item in ipairs(col2) do
+            local t = item.type
 
-        elseif def.modType == "enum" then
-            local optionsList = CommandDefs.GetOptions(def.options)
-            if optionsList then
-                -- 空参执行按钮
-                local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
-                drawText("[空参执行]", col2X, modY, reC)
-                modY = modY + rowH + 1
-
-                -- underscore modifier checkbox
-                local checkboxOffset = 0
-                if def.hasUnderscoreModifier then
-                    local uLabel = panelState.underscoreMode
-                        and ("[x] " .. (def.underscoreLabel or "Prefix(_)"))
-                        or  ("[ ] " .. (def.underscoreLabel or "Prefix(_)"))
-                    if hov == "mod_underscore" then
-                        drawText(uLabel, col2X, modY, C_HOVER)
-                    elseif panelState.underscoreMode then
-                        drawText(uLabel, col2X, modY, C_FORCE_ON)
-                    else
-                        drawText(uLabel, col2X, modY, C_LABEL)
-                    end
-                    checkboxOffset = rowH + 2
-                end
-
-                local listY = modY + checkboxOffset
-                local availH = contentY + contentH - listY
-                local maxOpts = math.floor(availH / rowH)
-                panelState.maxVisibleCol2 = maxOpts
-                ClickManager.col2Total = #optionsList
-                ClickManager.col2Visible = maxOpts
-                local startOpt = panelState.scrollOffset2 + 1
-                local endOpt = math.min(startOpt + maxOpts - 1, #optionsList)
-
-                for i = startOpt, endOpt do
-                    local opt = optionsList[i]
-                    local row = i - startOpt
-                    local oy = listY + row * rowH
-                    if panelState.selectedOptionIndex == i then
+            if t == "op_list" then
+                local ops = CommandDefs.Operators
+                for i, op in ipairs(ops) do
+                    local oy = modY + (i - 1) * rowH
+                    if panelState.selectedModIndex == i then
                         drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, SEL_R, SEL_G, SEL_B, 1)
-                        drawText(opt.label, col2X, oy, C_SEL_TEXT)
-                    elseif hov == ("opt_" .. i) then
+                        drawText(op.label, col2X, oy, C_SEL_TEXT)
+                    elseif hov == ("op_row_" .. i) then
                         drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, HOV_R, HOV_G, HOV_B, 1)
-                        drawText(opt.label, col2X, oy, C_HOVER)
+                        drawText(op.label, col2X, oy, C_HOVER)
                     else
-                        drawText(opt.label, col2X, oy, C_NORMAL)
+                        drawText(op.label, col2X, oy, C_NORMAL)
                     end
                 end
+                modY = modY + #ops * rowH + 2
 
-                -- 滚动指示器
-                if panelState.scrollOffset2 > 0 then
-                    drawText("▲", bx + COL1_W + COL2_W - 12, listY, C_SCROLL)
-                end
-                if endOpt < #optionsList then
-                    drawText("▼", bx + COL1_W + COL2_W - 12, listY + availH - LH, C_SCROLL)
-                end
-
-                -- 第二列滚动条
-                drawScrollbar(bx + COL1_W + COL2_W, listY, availH, #optionsList, maxOpts, panelState.scrollOffset2)
-            end
-
-        elseif def.modType == "text" then
-            if def.hasUnderscoreModifier then
-                local uLabel = panelState.underscoreMode
-                    and ("[x] " .. (def.underscoreLabel or "Prefix(_)"))
-                    or  ("[ ] " .. (def.underscoreLabel or "Prefix(_)"))
-                if hov == "mod_underscore" then
-                    drawText(uLabel, col2X, modY, C_HOVER)
-                elseif panelState.underscoreMode then
-                    drawText(uLabel, col2X, modY, C_FORCE_ON)
+            elseif t == "checkbox" then
+                local isOn = (item.id == "force" and panelState.forceMode)
+                          or (item.id == "underscore" and panelState.underscoreMode)
+                local cbLabel = (isOn and "[x] " or "[ ] ") .. (item.label or "")
+                local cbHov = "cb_" .. item.id
+                if hov == cbHov then
+                    drawText(cbLabel, col2X, modY, C_HOVER)
+                elseif isOn then
+                    drawText(cbLabel, col2X, modY, C_FORCE_ON)
                 else
-                    drawText(uLabel, col2X, modY, C_LABEL)
+                    drawText(cbLabel, col2X, modY, C_LABEL)
                 end
                 modY = modY + rowH + 2
-            end
-            drawText("输入ID或名称:", col2X, modY, C_NORMAL)
-            drawText("ID或名称子串", col2X, modY + LH, C_HINT)
-            local reY = modY + LH * 2 + 4
-            if def.allowEmpty then
-                local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
-                drawText("[空参执行]", col2X, reY, reC)
-            end
 
-            -- ═══ 搜索结果列表 ═══
-            local searchResults = panelState.getSearchResults()
-            if searchResults then
-                local searchY = reY + rowH + 2
-                drawRect(bx + COL1_W + 1, searchY - 1, COL2_W - 2, 1, 0.8, 0.8, 0.85)
-                local availH = contentY + contentH - searchY
-                local maxSearchVisible = math.floor(availH / rowH)
-                panelState.maxVisibleCol3 = maxSearchVisible
-                local startSR = panelState.scrollOffset3 + 1
-                local endSR = math.min(startSR + maxSearchVisible - 1, #searchResults)
+            elseif t == "button" then
+                local btnC = (hov == ("btn_" .. item.id)) and C_RUN_EMPTY_H or C_RUN_EMPTY
+                drawText(item.label or "", col2X, modY, btnC)
+                modY = modY + rowH + 2
 
-                for i = startSR, endSR do
-                    local sr = searchResults[i]
-                    local row = i - startSR
-                    local sy = searchY + row * rowH
-                    if hov == ("sr_" .. i) then
-                        drawRect(bx + COL1_W + 1, sy, COL2_W - 2, LH + 1, HOV_R, HOV_G, HOV_B, 1)
-                        drawText(sr.label, col2X, sy, C_HOVER)
-                    else
-                        drawText(sr.label, col2X, sy, C_NORMAL)
+            elseif t == "label" then
+                drawText(item.text or "", col2X, modY, C_NORMAL)
+                modY = modY + LH
+
+            elseif t == "hint" then
+                drawText(item.text or "", col2X, modY, C_HINT)
+                modY = modY + LH + 4
+
+            elseif t == "enum_list" then
+                local optionsList = CommandDefs.GetOptions(item.options)
+                if optionsList then
+                    local listY = modY
+                    local availH = contentY + contentH - listY
+                    local maxOpts = math.floor(availH / rowH)
+                    panelState.maxVisibleCol2 = maxOpts
+                    ClickManager.col2Total = #optionsList
+                    ClickManager.col2Visible = maxOpts
+                    local startOpt = panelState.scrollOffset2 + 1
+                    local endOpt = math.min(startOpt + maxOpts - 1, #optionsList)
+                    for i = startOpt, endOpt do
+                        local opt = optionsList[i]
+                        local row = i - startOpt
+                        local oy = listY + row * rowH
+                        if panelState.selectedOptionIndex == i then
+                            drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, SEL_R, SEL_G, SEL_B, 1)
+                            drawText(opt.label, col2X, oy, C_SEL_TEXT)
+                        elseif hov == ("opt_" .. i) then
+                            drawRect(bx + COL1_W + 1, oy, COL2_W - 2, LH + 1, HOV_R, HOV_G, HOV_B, 1)
+                            drawText(opt.label, col2X, oy, C_HOVER)
+                        else
+                            drawText(opt.label, col2X, oy, C_NORMAL)
+                        end
                     end
+                    if panelState.scrollOffset2 > 0 then
+                        drawText("▲", bx + COL1_W + COL2_W - 12, listY, C_SCROLL)
+                    end
+                    if endOpt < #optionsList then
+                        drawText("▼", bx + COL1_W + COL2_W - 12, listY + availH - LH, C_SCROLL)
+                    end
+                    drawScrollbar(bx + COL1_W + COL2_W, listY, availH, #optionsList, maxOpts, panelState.scrollOffset2)
                 end
+                break  -- enum_list 占满剩余高度，终止迭代
 
-                -- 搜索结果滚动指示器
-                if panelState.scrollOffset3 > 0 then
-                    drawText("▲", bx + COL1_W + COL2_W - 12, searchY, C_SCROLL)
+            elseif t == "search_results" then
+                local searchResults = panelState.getSearchResults()
+                if searchResults then
+                    local searchY = modY
+                    drawRect(bx + COL1_W + 1, searchY - 1, COL2_W - 2, 1, 0.8, 0.8, 0.85)
+                    local availH = contentY + contentH - searchY
+                    local maxSearchVisible = math.floor(availH / rowH)
+                    panelState.maxVisibleCol3 = maxSearchVisible
+                    local startSR = panelState.scrollOffset3 + 1
+                    local endSR = math.min(startSR + maxSearchVisible - 1, #searchResults)
+                    for i = startSR, endSR do
+                        local sr = searchResults[i]
+                        local row = i - startSR
+                        local sy = searchY + row * rowH
+                        if hov == ("sr_" .. i) then
+                            drawRect(bx + COL1_W + 1, sy, COL2_W - 2, LH + 1, HOV_R, HOV_G, HOV_B, 1)
+                            drawText(sr.label, col2X, sy, C_HOVER)
+                        else
+                            drawText(sr.label, col2X, sy, C_NORMAL)
+                        end
+                    end
+                    if panelState.scrollOffset3 > 0 then
+                        drawText("▲", bx + COL1_W + COL2_W - 12, searchY, C_SCROLL)
+                    end
+                    if endSR < #searchResults then
+                        drawText("▼", bx + COL1_W + COL2_W - 12, searchY + availH - LH, C_SCROLL)
+                    end
+                    drawScrollbar(bx + COL1_W + COL2_W, searchY, availH, #searchResults, maxSearchVisible, panelState.scrollOffset3)
                 end
-                if endSR < #searchResults then
-                    drawText("▼", bx + COL1_W + COL2_W - 12, searchY + availH - LH, C_SCROLL)
-                end
-
-                -- 搜索结果滚动条
-                drawScrollbar(bx + COL1_W + COL2_W, searchY, availH, #searchResults, maxSearchVisible, panelState.scrollOffset3)
+                break  -- search_results 占满剩余高度，终止迭代
             end
-
-        elseif def.modType == "none" then
-            drawText("无需参数", col2X, modY, C_LABEL)
-            drawText("按回车执行", col2X, modY + LH, C_HINT)
-
-        elseif def.modType == "value" then
-            drawText("输入数值:", col2X, modY, C_NORMAL)
-            drawText("数字 / inf / -inf", col2X, modY + LH, C_HINT)
-            local reY = modY + LH * 2 + 4
-            local reC = (hov == "run_empty") and C_RUN_EMPTY_H or C_RUN_EMPTY
-            drawText("[空参执行]", col2X, reY, reC)
         end
     else
         drawText("选择一个指令", col2X, contentY + 4, C_LABEL)
     end
 
-    -- ═══ 第三列：参数输入 + 状态信息 ═══
+    -- ═══ 第三列：参数分栏 ═══
     local col3X = bx + COL1_W + COL2_W + PAD + 1
     local statusStartY = contentY
 
-    if def and def.modType ~= "none" then
-        drawText("参数:", col3X, contentY + 1, C_LABEL)
-        local inputY = contentY + LH + 4
-        local inputW = COL3_W - PAD * 2 - 2
-        local inputH = LH + 4
-        drawRect(bx + COL1_W + COL2_W + 2, inputY - 1, inputW, inputH, 0.88, 0.88, 0.88)
-        drawRect(bx + COL1_W + COL2_W + 3, inputY, inputW - 2, inputH - 2, 0.96, 0.98, 0.96)
-        local cursor = (not panelState.editingPlayerId and cursorFrame < 30) and "_" or ""
-        drawText(panelState.paramText .. cursor, col3X, inputY + 1, C_INPUT)
-
-        if def.modType == "enum" and panelState.selectedOptionIndex and panelState.selectedOptionIndex > 0 then
-            local optionsList = CommandDefs.GetOptions(def.options)
-            if optionsList and optionsList[panelState.selectedOptionIndex] then
-                local selOpt = optionsList[panelState.selectedOptionIndex]
-                drawText("已选:", col3X, inputY + inputH + 4, C_LABEL)
-                drawText(selOpt.label, col3X, inputY + inputH + 4 + LH, C_DESC)
-                statusStartY = inputY + inputH + 4 + LH * 2 + 4
-            else
-                statusStartY = inputY + inputH + 6
+    if def then
+        local col3 = def.col3
+        if col3 then
+            drawText(col3.inputLabel or "参数:", col3X, contentY + 1, C_LABEL)
+            local inputY = contentY + LH + 4
+            local inputW = COL3_W - PAD * 2 - 2
+            local inputH = LH + 4
+            drawRect(bx + COL1_W + COL2_W + 2, inputY - 1, inputW, inputH, 0.88, 0.88, 0.88)
+            drawRect(bx + COL1_W + COL2_W + 3, inputY, inputW - 2, inputH - 2, 0.96, 0.98, 0.96)
+            local cursor = (not panelState.editingPlayerId and cursorFrame < 30) and "_" or ""
+            drawText(panelState.paramText .. cursor, col3X, inputY + 1, C_INPUT)
+            statusStartY = inputY + inputH + 6
+            -- 可选 hint（col3.hint 字段）
+            if col3.hint then
+                drawText(col3.hint, col3X, inputY + inputH + 4, C_HINT)
+                statusStartY = inputY + inputH + 4 + LH + 2
+            end
+            -- 若 col2 含 enum_list 且有选中项，显示已选内容
+            if CommandDefs.col2HasType(def, "enum_list") and panelState.selectedOptionIndex > 0 then
+                local optionsList = CommandDefs.col2GetEnumOptions(def)
+                if optionsList and optionsList[panelState.selectedOptionIndex] then
+                    local selOpt = optionsList[panelState.selectedOptionIndex]
+                    drawText("已选:", col3X, statusStartY, C_LABEL)
+                    drawText(selOpt.label, col3X, statusStartY + LH, C_DESC)
+                    statusStartY = statusStartY + LH * 2 + 4
+                end
             end
         else
-            statusStartY = inputY + inputH + 6
+            statusStartY = contentY + 4
         end
     else
         statusStartY = contentY + 4
@@ -595,8 +559,6 @@ function CommandUIRender.GetUIElements(panelState)
     -- 第二列
     local def = panelState.selectedDef
     if def then
-        local modY = contentY + 2
-
         -- [?] 帮助按钮
         table.insert(elements, {
             id = "help_btn", x = bx + COL1_W + COL2_W - 18, y = contentY + 1,
@@ -604,155 +566,99 @@ function CommandUIRender.GetUIElements(panelState)
             action = function() panelState.showHelp = true end,
         })
 
-        if def.modType == "op_value" then
-            local ops = CommandDefs.Operators
-            for i, _ in ipairs(ops) do
-                local oy = modY + (i - 1) * rowH
-                table.insert(elements, {
-                    id = "mod_" .. i, x = bx + COL1_W + 1, y = oy,
-                    width = COL2_W - 2, height = LH + 1,
-                    action = function() panelState.selectModifier(i) end,
-                })
-            end
-            local forceY = modY + #ops * rowH + 2
-            table.insert(elements, {
-                id = "mod_force", x = bx + COL1_W + 1, y = forceY,
-                width = COL2_W - 2, height = LH + 1,
-                action = function() panelState.toggleForce() end,
-            })
-            -- 空参执行（取消属性修改）
-            local reY = forceY + rowH + 2
-            table.insert(elements, {
-                id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
-                width = 60, height = LH + 1,
-                action = function()
-                    panelState.paramText = ""
-                    panelState.executeCommand()
-                end,
-            })
+        local modY = contentY + 2
+        local col2 = def.col2 or {}
 
-        elseif def.modType == "enum" then
-            -- 空参执行
-            table.insert(elements, {
-                id = "run_empty", x = bx + COL1_W + PAD + 1, y = modY,
-                width = 60, height = LH + 1,
-                action = function()
-                    panelState.paramText = ""
-                    panelState.executeCommand()
-                end,
-            })
-            modY = modY + rowH + 1
+        for _, item in ipairs(col2) do
+            local t = item.type
 
-            local checkboxOffset = 0
-            if def.hasUnderscoreModifier then
-                table.insert(elements, {
-                    id = "mod_underscore", x = bx + COL1_W + 1, y = modY,
-                    width = COL2_W - 2, height = LH + 1,
-                    action = function() panelState.toggleUnderscore() end,
-                })
-                checkboxOffset = rowH + 2
-            end
-
-            local optionsList = CommandDefs.GetOptions(def.options)
-            if optionsList then
-                local listY = modY + checkboxOffset
-                local availH = contentY + contentH - listY
-                local maxOpts = math.floor(availH / rowH)
-                local startOpt = panelState.scrollOffset2 + 1
-                local endOpt = math.min(startOpt + maxOpts - 1, #optionsList)
-
-                for i = startOpt, endOpt do
-                    local row = i - startOpt
-                    local oy = listY + row * rowH
+            if t == "op_list" then
+                local ops = CommandDefs.Operators
+                for i = 1, #ops do
+                    local oy = modY + (i - 1) * rowH
                     table.insert(elements, {
-                        id = "opt_" .. i, x = bx + COL1_W + 1, y = oy,
+                        id = "op_row_" .. i, x = bx + COL1_W + 1, y = oy,
                         width = COL2_W - 2, height = LH + 1,
-                        action = function() panelState.selectOption(i) end,
+                        action = (function(idx) return function() panelState.selectModifier(idx) end end)(i),
                     })
                 end
-            end
+                modY = modY + #ops * rowH + 2
 
-        elseif def.modType == "text" and def.hasUnderscoreModifier then
-            table.insert(elements, {
-                id = "mod_underscore", x = bx + COL1_W + 1, y = modY,
-                width = COL2_W - 2, height = LH + 1,
-                action = function() panelState.toggleUnderscore() end,
-            })
-            -- Match Render(): modY advances by rowH+2, then reY = modY + LH*2 + 4
-            local adjustedModY = modY + rowH + 2
-            local reY = adjustedModY + LH * 2 + 4
-            if def.allowEmpty then
+            elseif t == "checkbox" then
+                local cbId = item.id
                 table.insert(elements, {
-                    id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
-                    width = 60, height = LH + 1,
+                    id = "cb_" .. cbId, x = bx + COL1_W + 1, y = modY,
+                    width = COL2_W - 2, height = LH + 1,
                     action = function()
-                        panelState.paramText = ""
-                        panelState.executeCommand()
+                        if cbId == "force" then panelState.toggleForce()
+                        elseif cbId == "underscore" then panelState.toggleUnderscore()
+                        end
                     end,
                 })
-            end
-            -- Search result click elements
-            local searchResults = panelState.getSearchResults()
-            if searchResults then
-                local searchY = reY + rowH + 2
-                local availH = contentY + contentH - searchY
-                local maxSearchVisible = math.floor(availH / rowH)
-                local startSR = panelState.scrollOffset3 + 1
-                local endSR = math.min(startSR + maxSearchVisible - 1, #searchResults)
-                for si = startSR, endSR do
-                    local row = si - startSR
-                    local sy = searchY + row * rowH
-                    table.insert(elements, {
-                        id = "sr_" .. si, x = bx + COL1_W + 1, y = sy,
-                        width = COL2_W - 2, height = LH + 1,
-                        action = (function(idx)
-                            return function() panelState.selectSearchResult(idx) end
-                        end)(si),
-                    })
-                end
-            end
-        elseif def.modType == "text" then
-            local reY = modY + LH * 2 + 4
-            if def.allowEmpty then
+                modY = modY + rowH + 2
+
+            elseif t == "button" then
+                local btnId = item.id
                 table.insert(elements, {
-                    id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
+                    id = "btn_" .. btnId, x = bx + COL1_W + PAD + 1, y = modY,
                     width = 60, height = LH + 1,
                     action = function()
-                        panelState.paramText = ""
-                        panelState.executeCommand()
+                        if btnId == "run_empty" then
+                            panelState.paramText = ""
+                            panelState.executeCommand()
+                        end
                     end,
                 })
-            end
-            -- Search result click elements
-            local searchResults = panelState.getSearchResults()
-            if searchResults then
-                local searchY = reY + rowH + 2
-                local availH = contentY + contentH - searchY
-                local maxSearchVisible = math.floor(availH / rowH)
-                local startSR = panelState.scrollOffset3 + 1
-                local endSR = math.min(startSR + maxSearchVisible - 1, #searchResults)
-                for si = startSR, endSR do
-                    local row = si - startSR
-                    local sy = searchY + row * rowH
-                    table.insert(elements, {
-                        id = "sr_" .. si, x = bx + COL1_W + 1, y = sy,
-                        width = COL2_W - 2, height = LH + 1,
-                        action = (function(idx)
-                            return function() panelState.selectSearchResult(idx) end
-                        end)(si),
-                    })
+                modY = modY + rowH + 2
+
+            elseif t == "label" then
+                modY = modY + LH
+
+            elseif t == "hint" then
+                modY = modY + LH + 4
+
+            elseif t == "enum_list" then
+                local optionsList = CommandDefs.GetOptions(item.options)
+                if optionsList then
+                    local listY = modY
+                    local availH = contentY + contentH - listY
+                    local maxOpts = math.floor(availH / rowH)
+                    local startOpt = panelState.scrollOffset2 + 1
+                    local endOpt = math.min(startOpt + maxOpts - 1, #optionsList)
+                    for i = startOpt, endOpt do
+                        local row = i - startOpt
+                        local oy = listY + row * rowH
+                        table.insert(elements, {
+                            id = "opt_" .. i, x = bx + COL1_W + 1, y = oy,
+                            width = COL2_W - 2, height = LH + 1,
+                            action = (function(idx) return function() panelState.selectOption(idx) end end)(i),
+                        })
+                    end
                 end
+                break
+
+            elseif t == "search_results" then
+                local searchResults = panelState.getSearchResults()
+                if searchResults then
+                    local searchY = modY
+                    local availH = contentY + contentH - searchY
+                    local maxSearchVisible = math.floor(availH / rowH)
+                    local startSR = panelState.scrollOffset3 + 1
+                    local endSR = math.min(startSR + maxSearchVisible - 1, #searchResults)
+                    for si = startSR, endSR do
+                        local row = si - startSR
+                        local sy = searchY + row * rowH
+                        table.insert(elements, {
+                            id = "sr_" .. si, x = bx + COL1_W + 1, y = sy,
+                            width = COL2_W - 2, height = LH + 1,
+                            action = (function(idx)
+                                return function() panelState.selectSearchResult(idx) end
+                            end)(si),
+                        })
+                    end
+                end
+                break
             end
-        elseif def.modType == "value" then
-            local reY = modY + LH * 2 + 4
-            table.insert(elements, {
-                id = "run_empty", x = bx + COL1_W + PAD + 1, y = reY,
-                width = 60, height = LH + 1,
-                action = function()
-                    panelState.paramText = ""
-                    panelState.executeCommand()
-                end,
-            })
         end
     end
 

@@ -130,8 +130,8 @@ end
 --- 选择 enum 选项（第二列可列举选项）
 function PanelState.selectOption(index)
     local def = PanelState.selectedDef
-    if not def or def.modType ~= "enum" then return end
-    local optionsList = CommandDefs.GetOptions(def.options)
+    if not def or not CommandDefs.col2HasType(def, "enum_list") then return end
+    local optionsList = CommandDefs.col2GetEnumOptions(def)
     if not optionsList or index < 1 or index > #optionsList then return end
     PanelState.selectedOptionIndex = index
     -- 将选项值填入参数文本
@@ -234,8 +234,8 @@ end
 
 function PanelState.scrollCol2Down(maxVisible)
     local def = PanelState.selectedDef
-    if not def or def.modType ~= "enum" then return end
-    local optionsList = CommandDefs.GetOptions(def.options)
+    if not def or not CommandDefs.col2HasType(def, "enum_list") then return end
+    local optionsList = CommandDefs.col2GetEnumOptions(def)
     if not optionsList then return end
     local maxOffset = math.max(0, #optionsList - maxVisible)
     if PanelState.scrollOffset2 < maxOffset then
@@ -352,10 +352,8 @@ end
 function PanelState.getStatusInfo()
     local def = PanelState.selectedDef
     if not def then return nil end
-
     local playerId = PanelState.getPlayerId()
-    local statusKey = def.statusKey or def.key
-    return StatusProvider.getStatus(PanelState.category, statusKey, playerId)
+    return StatusProvider.getStatus(PanelState.category, def, playerId)
 end
 
 --- 组装指令并执行
@@ -389,7 +387,7 @@ function PanelState.executeCommand()
         local paramText = PanelState.paramText
 
         -- 如果命令有 underscore modifier 且已勾选，在参数前加 _
-        if def.hasUnderscoreModifier and PanelState.underscoreMode and paramText ~= "" then
+        if CommandDefs.col2HasType(def, "checkbox", "underscore") and PanelState.underscoreMode and paramText ~= "" then
             paramText = "_" .. paramText
         end
 

@@ -1,3 +1,5 @@
+local CommandDefs = require('render.ui.CommandDefs')
+
 local InputManager = {}
 
 InputManager.backspaceFrameCounter = 0
@@ -38,7 +40,7 @@ local function isShiftHeld()
 end
 
 function InputManager.Update(panelState)
-    -- 1. Hotkey: '\' 键
+    -- 1. Hotkey: '\' 键 切换 UI
     if Input.IsButtonTriggered(Keyboard.KEY_BACKSLASH, 0) then
         panelState.toggleVisible()
         return
@@ -46,7 +48,17 @@ function InputManager.Update(panelState)
 
     if not panelState.visible then return end
 
-    -- 帮助弹窗打开时只响应 \ 键关闭弹窗
+    -- ESC 键关闭 UI（或关闭帮助弹窗）
+    if Input.IsButtonTriggered(Keyboard.KEY_ESCAPE, 0) then
+        if panelState.showHelp then
+            panelState.showHelp = false
+        else
+            panelState.close()
+        end
+        return
+    end
+
+    -- 帮助弹窗打开时只响应 \ / ESC 关闭弹窗
     if panelState.showHelp then
         if Input.IsButtonTriggered(Keyboard.KEY_BACKSLASH, 0) then
             panelState.showHelp = false
@@ -86,8 +98,8 @@ function InputManager.Update(panelState)
     -- 如果选中了 text 类型命令且有搜索结果，Up/Down 滚动搜索结果；
     -- 否则滚动第一列
     local def = panelState.selectedDef
-    local isEnumSelected = def and def.modType == "enum"
-    local hasSearchResults = def and def.modType == "text" and panelState.getSearchResults() ~= nil
+    local isEnumSelected = def and CommandDefs.col2HasType(def, "enum_list")
+    local hasSearchResults = def and CommandDefs.col2HasType(def, "search_results") and panelState.getSearchResults() ~= nil
 
     if Input.IsButtonTriggered(Keyboard.KEY_UP, 0) then
         if isEnumSelected then
